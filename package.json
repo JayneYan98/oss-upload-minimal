@@ -1,0 +1,34 @@
+{
+  "name": "simple-altizure-oss-upload-example",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Tommy, Cheuksing Chan",
+    "email": "tchan5217@gmail.com"
+  },
+  "scripts": {
+    "dev": "parcel index.html --open",
+    "build": "parcel build index.js --no-cache --public-url ./"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-0",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "babel-eslint": "^9.0.0",
+    "eslint": "^4.9.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "parcel-bundler": "^1.12.3"
+  },
+  "dependencies": {
+    "aliyun-sdk": "^1.12.0",
+    "crypto-js": "^3.1.9-1",
+    "moment": "^2.24.0"
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ]
+}

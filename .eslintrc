@@ -1,0 +1,20 @@
+{
+  "extends": ["standard"],
+  "settings": {
+    "react": {
+      "version": "16.4"
+    }
+  },
+  "parser": "babel-eslint",
+  "globals": {
+    "document": true,
+    "window": true,
+    "process": true
+  },
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "react/react-in-jsx-scope": 0
+  }
+}

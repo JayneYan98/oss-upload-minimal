@@ -1,0 +1,15 @@
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  margin: 12px auto;
+}
+
+input[type="text"] {
+  flex: 1 0 auto;
+  margin-left: 24px;
+}

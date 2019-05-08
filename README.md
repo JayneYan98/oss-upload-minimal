@@ -1,0 +1,33 @@
+## 此范例展示如何使用 altizure oss 服务
+### 简介：
+ - 上传照片前， 需要透过 checksun 检查照片是否在服务器已经存在 hasImage(pid， checksun)
+ - 通过 uploadImageOSS(pid, bucket, filename, type, sha1sum) 获取 STS 令牌及其他上传所需的图像 meta info，
+     - STS 令牌的有效期只有 1 小时
+     - 在 STS 令牌未过期前，不要重复请求令牌。
+ - 获取 STS 令牌后，调用 mutation startImageUpload(id) 通知服务器。
+ - 使用相应的 STS 令牌把图像上传到 OSS。 （注： 这里使用 aliyun-sdk）
+ - 上传完成后调用 mutation doneImageUpload(id) 通知服务器。
+ 
+###### 详情流程可参考 https://docs.altizure.cn/zh-hans/upload.html
+#
+### 代码构成
+ - 与 aliyun-sdk 相关的代码， 在 src/oss.js
+ - 取得 sts 和 与 altizure 服务器相关的操作， 在 src/upload.js
+ - 如果项目并不使用 apollo, 可参考 src/graphql.js, 直接使用 fetch api 请求
+ - 关于 checksum 的检查， 可参考 src/sha1sum.js
+ - 其他请参考 /index.js
+#
+### 如何运行范例
+###### 注意： 请先安装npm和yarn
+######  执行命令
+```javascript
+yarn; // 安装dependency
+yarn dev; // 运行 dev server, 默认接口1234， 网页会自行打开
+```
+###### 或使用
+```javascript
+yarn; // 安装dependency
+yarn build; // build bundle
+```
+###### 然后打开 dist/index.html
+###### 详细可参考： https://parceljs.org/cli.html
