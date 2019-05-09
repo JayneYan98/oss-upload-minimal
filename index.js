@@ -1,14 +1,17 @@
 import './index.css'
-import readFilesAndUpload from './src/upload'
-import graphql from './src/graphql'
+import readFilesAndUpload from './src/read-and-upload'
+import { getImagesState } from './src/graphql'
 
-const defaultPid = ''
-const defaultToken = ''
-const defaultKey = ''
+// initialize
+window.altizureOss = {
+  pid: process.env.PID || '',
+  usertoken: process.env.TOKEN || '',
+  altikey: process.env.KEY || ''
+}
 
-window.altipid = defaultPid
-window.altitoken = defaultToken
-window.altikey = defaultKey
+/**
+ * Progress bar
+ */
 
 const progress = document.getElementById('progress')
 const showProgress = ({uploaded, max}) => {
@@ -16,42 +19,51 @@ const showProgress = ({uploaded, max}) => {
   progress.max = max
 }
 
+/**
+ * Input relevants
+ */
+
 const reader = document.getElementById('file-reader')
 reader.onchange = (e) => readFilesAndUpload(e, showProgress)
 
+
 const inputPid = document.getElementById('input-pid')
-inputPid.onchange = (e) => { window.altipid = e.target.value.trim() }
-inputPid.value = defaultPid
+inputPid.onchange = (e) => { window.altizureOss.pid = e.target.value }
+inputPid.value = window.altizureOss.pid
 
 const inputKey = document.getElementById('input-key')
-inputKey.onchange = (e) => { window.altikey = e.target.value.trim() }
-inputKey.value = defaultKey
+inputKey.onchange = (e) => { window.altizureOss.altikey = e.target.value }
+inputKey.value = window.altizureOss.altikey
 
 const inputToken = document.getElementById('input-token')
-inputToken.onchange = (e) => { window.altitoken = e.target.value.trim() }
-inputToken.value = defaultToken
+inputToken.onchange = (e) => { window.altizureOss.usertoken = e.target.value }
+inputToken.value = window.altizureOss.usertoken
+
+/**
+ * Print images state tables
+ */
+
+const print = (arr) => {
+  let str = arr.map((obj) => {
+    let temp = ''
+    for (let k in obj) temp += `${k}: ${obj[k]} | `
+    return temp
+  }).join('\n')
+  
+  document.getElementById('table').innerHTML = str || 'no images'
+}
 
 const logButton = document.getElementById('query-and-log')
 logButton.onclick = () => {
-  graphql(`
-    {
-      project (id: "${window.altipid || defaultPid}") {
-        allImages(filter: All) {
-          totalCount
-          edges {
-            node {
-              name
-              state
-              error
-              checksum
-            }
-          }
-        }
+  getImagesState({id: window.altizureOss.pid})
+    .then((res) => {
+      try {
+        const edges = res.data.project.allImages.edges
+        const arr = edges.map(edge => edge.node)
+        console.table(arr)
+        print(arr)
+      } catch (e) {
+        console.log(res)
       }
-    }
-  `)
-    .then(({data}) => {
-      const edges = data.project.allImages.edges
-      console.table(edges.map(edge => edge.node))
     })
 }

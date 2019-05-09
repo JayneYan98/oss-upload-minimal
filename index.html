@@ -5,35 +5,37 @@
     <script defer src="./index.js"></script>
   </head>
   <body>
-    <p class="row">
-        此范例简单展示 altizure oss 的使用方法，
-        <br />
-        api key / api token /  项目的PID
-        保存在 window.altikey / altitoken / altipid
-        <br />
-        实际使用时用户应自行修改
-    </p>
+    <h2 class="row">
+        第一步： 输入相关资料
+    </h2>
     <div class="row">
-      api-key:
+        应用令牌 (App Key)
       <input id="input-key" type="text" />
     </div>
     <div class="row">
-      api-token:
+      用户令牌 (User token)
       <input id="input-token" type="text" />
     </div>
     <div class="row">
-      上传至项目pid: 
+      项目 pid: 
       <input id="input-pid" type="text" />
     </div>
+    <h2 class="row">
+        第二步： 点击按钮并上传图片
+    </h2>
     <div class="row">
       <input id="file-reader" type="file" accept="image/*" multiple="multiple" />
     </div>
     <div class="row">
       <progress id="progress" style="width: 100%" value="0" max="100"></progress> 
     </div>
+    <h2 class="row">
+        第三步： 点击按钮请求相片的状态
+    </h2>
     <div class="row">
       <button id="query-and-log">
-          请求并console.log相片的状态， F12
+          请求
       </button>
     </div>
+    <pre id="table" class="row"></pre>
   </body>

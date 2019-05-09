@@ -1,94 +1,7 @@
 import moment from 'moment'
 import getUpload from './oss'
-import graphql from './graphql'
+import { getBucket, getHasImage, getSts, registerUpload, startUpload, doneUpload } from './graphql'
 import sha1sum from './sha1sum'
-
-let state = {}
-
-/**
- * graphql query
- */
-
-const getBucket = () => graphql(`
-  {
-    getGeoIPInfo {
-      id
-      nearestBuckets {
-        bucket
-        display
-        cloud
-      }
-    }
-  }
-`)
-
-const getSts = ({
-  pid,
-  bucket,
-  filename = '""',
-  type = 'JPEG'
-}) => graphql(`
-  mutation {
-    uploadImageOSS(pid: "${pid}", bucket: ${bucket}, filename: ${filename}, type: ${type}) {
-      sts {
-        id
-        secret
-        token
-        bucket
-        endpoint
-        expire
-      }
-    }
-  }
-`)
-
-const getHasImage = async ({pid, checksum}) => graphql(`
-  mutation {
-    hasImage(pid: "${pid}", checksum: "${checksum}") {
-      id,
-      state
-      name
-      checksum
-    }
-  }
-`)
-
-const registerUpload = ({
-  pid,
-  bucket,
-  filename,
-  checksum,
-  type
-}) => {
-  const _type = type.split('/')[1].toUpperCase()
-  return graphql(`
-    mutation {
-      uploadImageOSS(pid: "${pid}", bucket: ${bucket}, filename: "${filename}", type: ${_type}, checksum: "${checksum}") {
-        image {
-          id
-          filename
-        }
-      }
-    }
-  `)
-}
-
-const startUpload = ({id}) => graphql(`
-  mutation {
-    startImageUpload(id: "${id}") {
-      id
-      state
-    }
-  }
-`)
-
-const doneUpload = ({id}) => graphql(`
-  mutation {
-    doneImageUpload(id: "${id}") {
-      id
-    }
-  }
-`)
 
 /**
  * 如果目前没有 sts 或 已经过期,
@@ -98,12 +11,12 @@ const doneUpload = ({id}) => graphql(`
  */
 
 const getValidSts = async (pid) => {
-  const stsCached = state.sts
-  const bucket = state.bucket
+  const stsCached = window.altizureOss.sts
+  const bucket = window.altizureOss.bucket
 
   if (!stsCached || moment().add(30, 'minutes').isAfter(stsCached.expire)) {
     const { data: { uploadImageOSS: { sts } } } = await getSts({pid, bucket})
-    state.sts = sts
+    window.altizureOss.sts = sts
     return { sts, refresh: true }
   }
   return { sts: stsCached }
@@ -115,16 +28,16 @@ const getValidSts = async (pid) => {
  */
 
 const getValidUpload = async (pid) => {
-  let bucket = state.bucket
+  let bucket = window.altizureOss.bucket
   if (!bucket) {
     const { data: { getGeoIPInfo: { nearestBuckets } } } = await getBucket()
     bucket = nearestBuckets[0].bucket
-    state.bucket = bucket
+    window.altizureOss.bucket = bucket
   }
 
   const { sts, refresh } = await getValidSts(pid)
-  if (refresh) state.upload = getUpload(sts)
-  return state.upload
+  if (refresh) window.altizureOss.upload = getUpload(sts)
+  return window.altizureOss.upload
 }
 
 /**
@@ -136,7 +49,7 @@ const getValidUpload = async (pid) => {
  */
 
 const onFileLoaded = async ({file, chunk}) => {
-  const pid = window.altipid
+  const pid = window.altizureOss.pid
   const { name, type } = file
 
   const checksum = sha1sum(chunk)
@@ -148,7 +61,7 @@ const onFileLoaded = async ({file, chunk}) => {
 
   const { data: { uploadImageOSS: {image: {id, filename}} } } = await registerUpload({
     pid,
-    bucket: state.bucket,
+    bucket: window.altizureOss.bucket,
     filename: name,
     checksum,
     type
@@ -174,33 +87,25 @@ const onFileLoaded = async ({file, chunk}) => {
 
 const readFiles = async (e, callback) => {
   const files = e.target.files
-  let reading = []
 
-  const asyncRead = (file) => new Promise((resolve, reject) => {
-    reading.push({resolve, reject})
-
+  const asyncRead = (file) => new Promise((resolve) => {
     const reader = new window.FileReader()
-    reader.onload = e => {
-      const res = reader.result
-      const p = reading[0]
-      reading = reading.slice(1)
-      p.resolve(res)
-    }
+    
+    reader.onload = e => resolve(reader.result)
+
     reader.readAsArrayBuffer(file)
   })
 
 
-  let counter = 0
   for (let i = 0; i < files.length; i += 1) {
     await asyncRead(files[i])
-    .then(chunk => onFileLoaded({chunk, file: files[i]}))
-    .then(() => {
-      counter++
-      callback({
-        uploaded: counter,
-        max: files.length - 1
-      })   
-    })
+      .then(chunk => onFileLoaded({chunk, file: files[i]}))
+      .then(() => {
+        callback({
+          uploaded: i + 1,
+          max: files.length
+        })   
+      })
   }
 }
 
